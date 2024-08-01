@@ -1,5 +1,5 @@
-import React, {useState, useRef, useCallback} from 'react';
-import {View, Text, StyleSheet, PanResponder, Animated} from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 const CIRCLE_RADIUS = 36;
@@ -7,84 +7,104 @@ const CIRCLE_RADIUS = 36;
 const App = () => {
   const [dataDrag, setDataDrag] = useState([1, 2, 3, 4, 5]);
   const pan = useState(dataDrag.map(() => new Animated.ValueXY()))[0];
-  let coords = useRef({x: -1, y: -1}).current;
-  const [actionList,setActionList] = useState([])
-  
+  const coords = useRef({ x: -1, y: -1 });
+
+  const [actionList, setActionList] = useState([]);
 
   const handleLayout = useCallback((event) => {
-    const {x, y, height} = event.nativeEvent.layout;
-    coords = {x: Math.round(x), y: Math.round(y), height: height};
+    const { x, y, height, width } = event.nativeEvent.layout;
+    coords.current = {
+      x: Math.round(x),
+      y: Math.round(y),
+      height: height,
+      width: width,
+    };
   }, []);
 
-  const panResponder = index =>
+  const panResponder = (index) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      // onPanResponderGrant : ()=>{
-      //   pan.setOffset({x: pan[index].x, y: pan[index].x});
-
-      //   // pan.setOffset({
-      //   //   x:pan[index].x,
-      //   //   y:pan[index].y
-
-      //   // })
-      // },
+      onPanResponderGrant: (evt, gestureState) => {
+      //  pan[index].setOffset({x:pan[index].x,y:pan[index].y });
+        pan[index].setValue({ x: 0, y: 0 });
+      },
       onPanResponderMove: Animated.event([
         null,
-        {dx: pan[index].x, dy: pan[index].y},
+        { dx: pan[index].x, dy: pan[index].y },
       ]),
       onPanResponderRelease: (e, gesture) => {
-       
+        
         if (isDropZone(gesture)) {
           console.log('Dropped in drop zone');
-          // let tempArr = [...actionList]
-          // console.log("tempArrtempArr"+JSON.stringify(tempArr))
-          // tempArr.push(index)
-          // setActionList(tempArr)
-          pan[index].extractOffset();
          
-          // tempArr.push(index)
-          // setActionList(tempArr)
-          // console.log("panpanpan"+JSON.stringify(index))
+          pan[index].extractOffset();
+          pushItemInList(index)
+         
         } else {
           console.log('NOOOOOOO   Dropped in drop zone');
 
           pan[index].extractOffset();
+          // pan[index].flattenOffset()      
 
           // Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
         }
       },
     });
 
-  const isDropZone = gesture => {
+    const pushItemInList = (index)=>{
+      let tempArr = [...actionList];
+      console.log('tempArrtempArr' + JSON.stringify(tempArr));
+      tempArr.push(index);
+      setActionList(tempArr);
+    }
+
+  const isDropZone = (gesture) => {
     // if (!coords) return false;
-    const {moveY} = gesture;
-    return moveY > coords.y && moveY < coords.y + coords.height;
+    const { moveY, moveX } = gesture;
+    console.log('coords.ycoords.y' + coords.current.y);
+    console.log('moveYmoveY' + JSON.stringify(gesture));
+    console.log('coordscoords' + JSON.stringify(coords));
+
+    return (
+      moveY > coords.current.y &&
+      moveX > coords.current.x &&
+      moveY < coords.current.y + coords.current.height &&
+      moveX < coords.current.x + coords.current.width
+    );
   };
 
-  
   return (
     <View style={styles.mainContainer}>
-     <View onLayout={handleLayout} style={styles.dropZone}>
+      <View onLayout={handleLayout} style={styles.dropZone}>
         <Text style={styles.text}>Drop me here!</Text>
         <FlatList
-        data={actionList}
-        style={{flexGrow:1}}
-        renderItem={({item,index})=>{
-          return <View style={{height:40,width:40,margin:10, backgroundColor:"red"}}></View>
-        }}
+          data={actionList}
+          style={{ flexGrow: 1 }}
+          renderItem={({ item, index }) => {
+            return (
+              <View
+                style={{
+                  height: 40,
+                  width: 40,
+                  margin: 10,
+                  backgroundColor: 'red',
+                }}
+              ></View>
+            );
+          }}
         />
       </View>
 
       <View style={styles.directionContainer}>
-      {dataDrag.map((ele, index) => (
-        <Animated.View
-          {...panResponder(index).panHandlers}
-          style={[styles.circle, pan[index].getLayout()]}>
-          <Text style={styles.text}>Drag me!</Text>
-        </Animated.View>
-      ))}
+        {dataDrag.map((ele, index) => (
+          <Animated.View
+            {...panResponder(index).panHandlers}
+            style={[styles.circle, pan[index].getLayout()]}
+          >
+            <Text style={styles.text}>Drag me!</Text>
+          </Animated.View>
+        ))}
       </View>
-     
     </View>
   );
 };
@@ -92,14 +112,14 @@ const App = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    
-    flexDirection:"row"
+
+    flexDirection: 'row',
   },
-  directionContainer:{
-    flex:0.5
+  directionContainer: {
+    flex: 0.5,
   },
   dropZone: {
-    flex:0.5,
+    flex: 0.5,
     backgroundColor: '#2c3e50',
     justifyContent: 'center',
     alignItems: 'center',
