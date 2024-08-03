@@ -68,24 +68,17 @@ const App = () => {
           // pan[index].extractOffset();
           pushItemInList(index)
           Animated.parallel([
-            // Animated.timing(opacityAnimation[index], {
-            //   toValue: 0.0,
-            //   duration: 0,
-            //   useNativeDriver: false
-            // }),
-            // pan[index].setValue({ x: 0, y: 0 }),
-            // Animated.timing(opacityAnimation[index], {
-            //   toValue: 0.8,
-            //   duration: 1500,
-            //   useNativeDriver: false
-            // })
+           
             Animated.timing(opacityAnimation[index], {
               toValue: 0,
               duration: 0,
               easing: Easing.linear,
               useNativeDriver: false
             }),
-            
+            Animated.timing(this.ball, {
+              toValue: {x: 250, y: 300,},
+              duration: 2000
+          }),
             
             Animated.timing(pan[index], {
               toValue: { x: 0, y: 0 },
