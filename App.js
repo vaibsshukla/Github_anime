@@ -1,19 +1,37 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
+import { View, Text, StyleSheet, PanResponder, Animated, TouchableOpacity, Dimensions, Easing } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
+const {height,width} = Dimensions.get("screen")
+
 const CIRCLE_RADIUS = 36;
+
 
 const App = () => {
   const [dataDrag, setDataDrag] = useState([1, 2, 3, 4, 5]);
   const pan = useState(dataDrag.map(() => new Animated.ValueXY()))[0];
-  const coords = useRef({ x: -1, y: -1 });
+  // const pan2 = useState(dataDrag.map(() => new Animated.ValueXY()))[0];
 
+  const coords = useRef({ x: -1, y: -1 });
+  const coords1 = useRef({ x: -1, y: -1 });
+
+  const opacityAnimation = useState(dataDrag.map(() => new Animated.Value(0.8)))[0];
   const [actionList, setActionList] = useState([]);
 
   const handleLayout = useCallback((event) => {
     const { x, y, height, width } = event.nativeEvent.layout;
+    console.log("xxxxxxx"+x)
+    console.log("yyyyyyy"+y)
+    console.log("height"+height)
+    console.log("width"+width)
+
     coords.current = {
+      x: Math.round(x),
+      y: Math.round(y),
+      height: height,
+      width: width,
+    };
+    coords1.current = {
       x: Math.round(x),
       y: Math.round(y),
       height: height,
@@ -21,12 +39,22 @@ const App = () => {
     };
   }, []);
 
+  // this.cardOpacity = this.opacityValue.interpolate({
+  //   inputRange: [0, 1, 2],
+  //   outputRange: [0, 0.5, 1]
+  // });
+
   const panResponder = (index) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt, gestureState) => {
       //  pan[index].setOffset({x:pan[index].x,y:pan[index].y });
         pan[index].setValue({ x: 0, y: 0 });
+        Animated.timing(opacityAnimation[index], {
+          toValue: 0.4,
+          duration: 1500,
+          useNativeDriver: false
+        }).start()
       },
       onPanResponderMove: Animated.event([
         null,
@@ -37,9 +65,49 @@ const App = () => {
         if (isDropZone(gesture)) {
           console.log('Dropped in drop zone');
          
-          pan[index].extractOffset();
+          // pan[index].extractOffset();
           pushItemInList(index)
-         
+          Animated.parallel([
+            // Animated.timing(opacityAnimation[index], {
+            //   toValue: 0.0,
+            //   duration: 0,
+            //   useNativeDriver: false
+            // }),
+            // pan[index].setValue({ x: 0, y: 0 }),
+            // Animated.timing(opacityAnimation[index], {
+            //   toValue: 0.8,
+            //   duration: 1500,
+            //   useNativeDriver: false
+            // })
+            Animated.timing(opacityAnimation[index], {
+              toValue: 0,
+              duration: 0,
+              easing: Easing.linear,
+              useNativeDriver: false
+            }),
+            
+            
+            Animated.timing(pan[index], {
+              toValue: { x: 0, y: 0 },
+              duration: 0,
+              useNativeDriver: false
+            }),
+            Animated.timing(opacityAnimation[index], {
+              toValue: 1,
+              duration: 500,
+              easing: Easing.linear,
+              useNativeDriver: false
+            }),
+          ]).start()
+          // Animated.event([
+          //   null,
+          //   { x: coords.current.x, y: coords.current.y },
+          // ])
+          // pan[index].setValue()
+          // opacityAnimation[index].interpolate({
+          //   inputRange: [0, 2],
+          //   outputRange: [0, 1]}
+          // )
         } else {
           console.log('NOOOOOOO   Dropped in drop zone');
 
@@ -94,12 +162,21 @@ const App = () => {
           }}
         />
       </View>
+      
+      {dataDrag?.map((ele,index)=>
+         <TouchableOpacity onPress={() => {}}>
+          <View style={[styles.circle,{position:"absolute",marginTop:(CIRCLE_RADIUS*2)*index,}]}>
+            <Text style={styles.text}>Drag me!</Text>
+          </View>
+         </TouchableOpacity>
+      )}
 
       <View style={styles.directionContainer}>
         {dataDrag.map((ele, index) => (
           <Animated.View
+          
             {...panResponder(index).panHandlers}
-            style={[styles.circle, pan[index].getLayout()]}
+            style={[styles.circle, pan[index].getLayout(),{opacity:opacityAnimation[index]}]}
           >
             <Text style={styles.text}>Drag me!</Text>
           </Animated.View>
@@ -240,3 +317,4 @@ export default App;
 //   }
 
 // })
+
