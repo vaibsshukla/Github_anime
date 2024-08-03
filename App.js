@@ -39,16 +39,11 @@ const App = () => {
     };
   }, []);
 
-  // this.cardOpacity = this.opacityValue.interpolate({
-  //   inputRange: [0, 1, 2],
-  //   outputRange: [0, 0.5, 1]
-  // });
-
+ 
   const panResponder = (index) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt, gestureState) => {
-      //  pan[index].setOffset({x:pan[index].x,y:pan[index].y });
         pan[index].setValue({ x: 0, y: 0 });
         Animated.timing(opacityAnimation[index], {
           toValue: 0.4,
@@ -63,12 +58,8 @@ const App = () => {
       onPanResponderRelease: (e, gesture) => {
         
         if (isDropZone(gesture)) {
-          console.log('Dropped in drop zone');
-         
-          // pan[index].extractOffset();
           pushItemInList(index)
           Animated.parallel([
-           
             Animated.timing(opacityAnimation[index], {
               toValue: 0,
               duration: 0,
@@ -92,40 +83,20 @@ const App = () => {
               useNativeDriver: false
             }),
           ]).start()
-          // Animated.event([
-          //   null,
-          //   { x: coords.current.x, y: coords.current.y },
-          // ])
-          // pan[index].setValue()
-          // opacityAnimation[index].interpolate({
-          //   inputRange: [0, 2],
-          //   outputRange: [0, 1]}
-          // )
         } else {
-          console.log('NOOOOOOO   Dropped in drop zone');
-
           pan[index].extractOffset();
-          // pan[index].flattenOffset()      
-
-          // Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
         }
       },
     });
 
     const pushItemInList = (index)=>{
       let tempArr = [...actionList];
-      console.log('tempArrtempArr' + JSON.stringify(tempArr));
       tempArr.push(index);
       setActionList(tempArr);
     }
 
   const isDropZone = (gesture) => {
-    // if (!coords) return false;
     const { moveY, moveX } = gesture;
-    console.log('coords.ycoords.y' + coords.current.y);
-    console.log('moveYmoveY' + JSON.stringify(gesture));
-    console.log('coordscoords' + JSON.stringify(coords));
-
     return (
       moveY > coords.current.y &&
       moveX > coords.current.x &&
